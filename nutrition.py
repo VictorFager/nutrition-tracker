@@ -8,13 +8,10 @@ import os
 terminal_length = os.get_terminal_size().columns
 terminal_height = os.get_terminal_size().lines
 
-# LOOP
-# print top bar
-# print menu and cursor
-# wait for input
-
 
 def main():
+    ''' Main function of the program'''
+
     menu_selection = 1
 
     start_menu_options = ["Add", "Print", "Delete", "Quit"]
@@ -41,10 +38,17 @@ def print_menu(menu_options, cursor_pos, menu_title="MENU"):
 
 
 def input_menu_selection(menu_option_amount):
-    # MORE WORK IS NEEDED
-    # kanske testa en try except?
-    selection = int(input("Enter a number: "))
-    return selection
+
+    try:
+        selection = int(input("Enter a number: "))
+    except ValueError:
+        print("Not a number")
+        return 0
+    else:
+        if selection not in range(1, menu_option_amount+1):
+            print("Number not an option in the menu")
+            return 0
+        return selection
 
 
 if __name__ == '__main__':
