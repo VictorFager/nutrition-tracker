@@ -1,75 +1,89 @@
-'''
-Nutrition tracking program
-'''
+'''Nutrition tracking program'''
 
 import ui
-from view import MenuView, ListView
+from view import View, MenuView, ListView
 
+
+# Keeps the main loop of the program running while True
 run_program = True
+
+# Keeps track of the programs view state
+previous_view = None
+current_view = None
 
 
 def main():
-    ''' Main function of the program'''
+    '''Setting up views and runs main loop of the program'''
 
     ui.app_name = "Nutrition Tracker"
 
-    ingredients_view = ListView("Ingredients", [])
-    meals_view = ListView("Meals", [])
-    weight_view = ListView("Weight", [])
-    journal_view = ListView("Journal", [])
-    statistics_view = ListView("Statistics", [])
-
-    menu_options = [
-        ingredients_view,
-        meals_view,
-        weight_view,
-        journal_view,
-        statistics_view
-    ]
-
-    main_menu_view = MenuView("Main Menu", menu_options)
-    current_view = main_menu_view
+    global current_view
+    current_view = setup_views()
 
     while run_program:
         ui.clear_terminal()
         ui.print_top_bar(current_view.title)
+        ui.print_valid_commands(current_view.commands)
+        ui.print_view_content(current_view.get_content())
+        ui.print_feedback(*current_view.get_feedback())
 
-        content = current_view.get_content()
-        ui.print_view_content(content)
+        user_input = input(current_view.input_prompt)
 
-        ui.print_feedback()
-        # prompt = "Enter a number or command: "
-        # input_range = range(len(content) + 1, 1)
-        # commands = current_view.commands
-        process_input(current_view)
+        # The current_view gets to process user_input first
+        result = current_view.process_input(user_input)
+
+        # Now the main program gets to process the result of the 
+        # view processing the user_input
+        process_result(result)
 
 
-def process_input(view):
+def setup_views():
+    '''Performing setup of essential views'''
 
-    user_input = input(view.input_prompt).split()
+    menu_options = [
+        ListView("Ingredients", []),
+        ListView("Meals", []),
+        ListView("Weight", []),
+        ListView("Journal", []),
+        ListView("Statistics", [])
+    ]
 
-    if (len(user_input) == 1):
+    return MenuView("Main Menu", menu_options)
 
-        if user_input[0] in view.get_commands():
-            # view.process_command(user_input[0])
+
+def process_result(result):
+    '''Processing results after the current view has processed user input'''
+
+    if isinstance(result, View):
+        if current_view == result:
             return
-        elif user_input[0] == "quit":
+        switch_view(result)
+        return
+
+    match result:
+        case None:
+            pass
+        case "quit":
             quit_program()
-            return
+        case "back":
+            if previous_view:
+                switch_view(previous_view)
+        case _:
+            global current_view
+            current_view.set_feedback("Something unexpected happened!", False)
 
-        try:
-            result = int(user_input[0])
 
-        except ValueError:
-            ui.feedback = "Input not valid"
-        else:
-            if result not in view.get_valid_range():
-                ui.feedback = "Number selected out of range"
+def switch_view(new_view):
+    '''Switching current_view to new one and updates previous_view'''
 
-            # view.process_selection(result)
+    global previous_view, current_view
+    previous_view = current_view
+    current_view = new_view
 
 
 def quit_program():
+    '''Setting run_program to False canceling the main loop of the program'''
+
     global run_program
     run_program = False
 
